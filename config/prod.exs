@@ -13,19 +13,24 @@ use Mix.Config
 # which you typically run after static files are built.
 config :phoenixbin, Phoenixbin.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [scheme: "https", host: "phoenixbin.herokuapp.com", port: 443],
-force_ssl: [rewrite_on: [:x_forwarded_proto]],
+  url: [scheme: "https", host: "phoenixbin.herokuapp.com", port: 443], 
+  force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Do not print debug messages in production
 config :logger, level: :info
 
-# Configure your database
-config :hello_phoenix, HelloPhoenix.Repo,
+
+
+  # Configure your database
+config :phoenixbin, Phoenixbin.Repo,
   adapter: Ecto.Adapters.Postgres,
-  url: System.get_env("DATABASE_URL"),
-  pool_size: 20
+  username: "postgres",
+  password: "postgres",
+  database: "phoenixbin_dev",
+  hostname: "localhost",
+  pool_size: 10
 
 # ## SSL Support
 #
