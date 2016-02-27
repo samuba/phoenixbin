@@ -107,7 +107,7 @@ channel.on("new_msg", payload => {
   html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params))
 
   messagesContainer.prepend(html)
-  $(".panel-primary").slideDown("medium", () => {});
+  $(".panel-primary").slideDown("fast", () => {});
 })
 
 channel.join()
