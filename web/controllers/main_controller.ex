@@ -2,9 +2,7 @@ defmodule Phoenixbin.MainController do
   use Phoenixbin.Web, :controller
 
   def generate(conn, _params) do
-    IO.puts "------1"
-    conn |> redirect(to: "/#{SecureRandom.urlsafe_base64(5)}/inspect")
-    IO.puts "------2"
+    conn |> redirect(to: "/#{SecureRandom.urlsafe_base64(6)}/inspect")
     conn
   end
 
