@@ -12,8 +12,8 @@ defmodule Phoenixbin.MainController do
 
   def request(conn, %{"id" => id}) do
     IO.puts "################# request for: " <> id
-    IO.inspect conn
-    IO.puts "#################"
+    #IO.inspect conn
+    #IO.puts "#################"
 
     Phoenixbin.Endpoint.broadcast("rooms:#{id}", "new_msg", %{
       body:         conn |> get_body,

@@ -2,7 +2,7 @@
 	<div class="requests_head">listening for http request on   
 		<input 
 			readonly="true"
-			class="request-url" 
+			class="request-url"
 			value="<%= main_url(@conn, :request, @id) %>">
 	<div>
 
@@ -24,7 +24,7 @@
 		    return $.fn.textWidth.fakeEl.width(); 
 		};
 		$(cssClass).on('input', function() {
-		    var padding = 5; //Works as a minimum width
+		    var padding = 7; //Works as a minimum width
 		    var valWidth = ($(this).textWidth() + padding) + 'px';
 		    $(cssClass).css('width', valWidth);
 		}).trigger('input');
