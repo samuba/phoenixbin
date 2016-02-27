@@ -83,7 +83,7 @@ channel.on("new_msg", payload => {
               </li>
               <li class="request_property">
                 <span class="property_title">Body</span>
-                <textarea readonly class="body-box form-control" rows="5">${payload.body}</textarea>
+                ${ payload.body ? '<textarea readonly class="body-box form-control" rows="5">' + payload.body + '</textarea>' : '<span class="property_empty">empty<span>' }
               </li>
             </ul>
           </div>
