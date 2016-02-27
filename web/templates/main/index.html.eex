@@ -1,0 +1,6 @@
+<h3>listening for http request on: <%= main_url(@conn, :request, @id) %></h3>
+<br>
+
+<div id="messages"></div>
+
+<script>var pageId = "<%= @id %>";</script>

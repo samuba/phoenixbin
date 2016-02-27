@@ -5,8 +5,8 @@ defmodule Phoenixbin.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    #plug :protect_from_forgery
+    #plug :put_secure_browser_headers 
   end
 
   pipeline :api do
@@ -16,7 +16,19 @@ defmodule Phoenixbin.Router do
   scope "/", Phoenixbin do
     pipe_through :browser # Use the default browser stack
 
-    get "/", PageController, :index
+    get "/",            HomeController, :index
+    get "/generate",    MainController, :generate
+    get "/:id/inspect", MainController, :inspect
+
+    get     "/:id", MainController, :request
+    put     "/:id", MainController, :request
+    post    "/:id", MainController, :request 
+    patch   "/:id", MainController, :request 
+    delete  "/:id", MainController, :request     
+    options "/:id", MainController, :request
+    connect "/:id", MainController, :request
+    trace   "/:id", MainController, :request
+    head    "/:id", MainController, :request
   end
 
   # Other scopes may use custom stacks.

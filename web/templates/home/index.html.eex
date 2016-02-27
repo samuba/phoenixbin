@@ -1,0 +1,8 @@
+<div class="jumbotron">
+  <h2>Welcome to PhoenixBin</h2>
+  <p class="lead">A requestBin clone implemented in the phoenix framework for elixir</p>
+</div>
+
+<center class="content">
+  <a href="generate" class="btn btn-primary btn-lg">Generate Request Page</a>
+</center>

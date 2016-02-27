@@ -1,4 +1,4 @@
-defmodule Phoenixbin.PageController do
+defmodule Phoenixbin.HomeController do
   use Phoenixbin.Web, :controller
 
   def index(conn, _params) do

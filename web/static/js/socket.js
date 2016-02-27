@@ -54,9 +54,84 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
-let channel = socket.channel("topic:subtopic", {})
+let channel           = socket.channel("rooms:" + pageId, {})
+let messagesContainer = $("#messages")
+
+channel.on("new_msg", payload => {
+  console.log("incoming for: " + pageId, payload)
+  let html = `<br/>
+     <div class="panel panel-default">
+       <div class="panel-heading">${Date()}</div>
+       <div class="panel-body">
+         <table class="table table-condensed">
+           <tr>
+             <td class="col-md-6"><b>URL</b></td>
+             <td>${payload.url}</td>
+           </tr>
+           <tr>
+             <td class="col-md-6"><b>Remote IP</b></td>
+             <td>${payload.remote_ip}</td>
+           </tr>
+           <tr>
+             <td><b>Method</b></td>
+             <td>${payload.method}</td>
+           </tr>
+           <tr>
+             <td><b>Body</b></td>
+             <td>${payload.body}</td>
+           </tr>
+           <tr>
+             <td><b>Body Params</b></td>
+             <td>
+              <table class="table table-condensed">
+              #body_params_placeholder#
+              </table>
+             </td>
+           </tr>
+           <tr>
+             <td><b>Query Params</b></td>
+             <td>
+              <table class="table table-condensed">
+              #query_params_placeholder#
+              </table>
+             </td>
+           </tr>
+           <tr>
+             <td><b>Headers</b></td>
+             <td>
+              <table class="table table-condensed">
+              #headers_placeholder#
+              </table>
+            </td>
+           </tr>
+           <tr>
+             <td><b>Cookies</b></td>
+             <td>
+              <table class="table table-condensed">
+              #cookies_placeholder#
+              </table>
+            </td>
+           </tr>
+         </table>
+       </div>
+     </div>`
+
+  html = html.replace("#headers_placeholder#", constructTableRows(payload.headers))
+  html = html.replace("#cookies_placeholder#", constructTableRows(payload.cookies))
+  html = html.replace("#query_params_placeholder#", constructTableRows(payload.query_params))
+  html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params))
+
+  messagesContainer.prepend(html)
+})
+
 channel.join()
-  .receive("ok", resp => { console.log("Joined successfully", resp) })
-  .receive("error", resp => { console.log("Unable to join", resp) })
+  .receive("ok", resp => { console.log(`Joined successfully: "${pageId}"`, resp) })
+  .receive("error", resp => { console.error(`Unable to join: "${pageId}"`, resp) })
+
+function constructTableRows(list) {
+  let rows = "";
+  list.forEach(x => rows += `<tr><td><b>${x[0]}</b></td><td>${x[1]}</td></tr>`)
+  return rows;
+}
 
 export default socket
