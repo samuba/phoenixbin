@@ -55,7 +55,7 @@ socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
 let channel           = socket.channel("rooms:" + pageId, {})
-let messagesContainer = $("#messages")
+let messagesContainer = $(".requests_messages")
 
 channel.on("new_msg", payload => {
   console.log("incoming for: " + pageId, payload)

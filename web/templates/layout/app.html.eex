@@ -14,7 +14,7 @@
   <body>
 
       <header class="header">
-        <h1>PhoenixBin</h1>
+        <a href="/" class="header_title">PhoenixBin</a>
       </header>
 
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>

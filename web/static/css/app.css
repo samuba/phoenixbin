@@ -9,12 +9,6 @@
   margin-right: 20px;
 }
 
-/* Space out content a bit */
-body, form, ul, table {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
 /* Phoenix flash messages */
 .alert:empty { display: none; }
 
@@ -25,7 +19,28 @@ form.link, form.button {
 
 /* Custom page header */
 .header {
+	height: 40px;
   border-bottom: 1px solid #e5e5e5;
+  margin-top: 5px;
+}
+
+.header_title {
+	margin-left: 30px;
+	font-size: 19pt;
+}
+
+.requests {
+	margin-right: 20px;
+	margin-left: 20px;
+}
+
+.requests_head {
+	font-size: 15pt;
+	margin-top: -10px;
+}
+
+.requests_messages {
+	font-size: 9.5pt;
 }
 
 /* Customize container */

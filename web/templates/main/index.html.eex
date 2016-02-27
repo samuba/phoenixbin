@@ -1,11 +1,13 @@
-<h3>listening for http request on: 
-	<input 
-		class="request-url" 
-		value="<%= main_url(@conn, :request, @id) %>">
-</h3>
-<br>
+<div class="requests">
+	<div class="requests_head">listening for http request on   
+		<input 
+			readonly="true"
+			class="request-url" 
+			value="<%= main_url(@conn, :request, @id) %>">
+	<div>
 
-<div id="messages"></div>
+	<div class="requests_messages"></div>
+<div>
 
 <script>
 	// hack to get dynamic information to socket code 
