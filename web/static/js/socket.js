@@ -61,7 +61,7 @@ channel.on("new_msg", payload => {
   console.log("incoming for: " + pageId, payload)
   let date = new Date();
   let html = `<br/>
-     <div class="panel panel-primary">
+     <div class="panel panel-primary" hidden>
        <div class="panel-heading">
         <div class="row">
           <div class="col-xs-1"><span class="request_method">${payload.method}</span></div>
@@ -107,6 +107,7 @@ channel.on("new_msg", payload => {
   html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params))
 
   messagesContainer.prepend(html)
+  $(".panel-primary").slideDown("medium", () => {});
 })
 
 channel.join()
