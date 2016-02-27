@@ -54,9 +54,9 @@ form.link, form.button {
 }
 
 /* Main marketing message */
-.jumbotron {
+.home_jumbotron {
+	margin-top: 100px;
   text-align: center;
-  border-bottom: 1px solid #e5e5e5;
 }
 
 /* Responsive: Portrait tablets and up */
