@@ -1,6 +1,32 @@
-<h3>listening for http request on: <%= main_url(@conn, :request, @id) %></h3>
-<br>
+<div class="requests">
+	<div class="requests_head">listening for http request on   
+		<input 
+			readonly="true"
+			class="request-url"
+			value="<%= main_url(@conn, :request, @id) %>">
+	<div>
 
-<div id="messages"></div>
+	<div class="requests_messages"></div>
+<div>
 
-<script>var pageId = "<%= @id %>";</script>
+<script>
+	// hack to get dynamic information to socket code 
+	var pageId = "<%= @id %>";
+
+	window.onload = () => {
+		autoresizeInput(".request-url")
+	}
+
+	function autoresizeInput (cssClass) {
+		$.fn.textWidth = function(text, font) {
+		    if (!$.fn.textWidth.fakeEl) $.fn.textWidth.fakeEl = $('<span>').hide().appendTo(document.body);
+		    $.fn.textWidth.fakeEl.text(text || this.val() || this.text()).css('font', font || this.css('font'));
+		    return $.fn.textWidth.fakeEl.width(); 
+		};
+		$(cssClass).on('input', function() {
+		    var padding = 7; //Works as a minimum width
+		    var valWidth = ($(this).textWidth() + padding) + 'px';
+		    $(cssClass).css('width', valWidth);
+		}).trigger('input');
+	}
+</script>

@@ -2,10 +2,8 @@ defmodule Phoenixbin.MainController do
   use Phoenixbin.Web, :controller
 
   def generate(conn, _params) do
-    IO.puts "------1"
-    conn |> redirect(to: "/#{SecureRandom.urlsafe_base64(5)}/inspect")
-    IO.puts "------2"
-    conn
+    conn |> redirect(to: "/#{SecureRandom.urlsafe_base64(6)}/inspect")
+    conn |> resp(200, "ok")
   end
 
   def inspect(conn, %{"id" => id}) do
@@ -13,10 +11,6 @@ defmodule Phoenixbin.MainController do
   end
 
   def request(conn, %{"id" => id}) do
-    IO.puts "################# request for: " <> id
-    IO.inspect conn
-    IO.puts "#################"
-
     Phoenixbin.Endpoint.broadcast("rooms:#{id}", "new_msg", %{
       body:         conn |> get_body,
       url:          conn |> get_url,
@@ -27,7 +21,9 @@ defmodule Phoenixbin.MainController do
       query_params: conn.query_params |> map_to_lists,
       cookies:      conn.cookies      |> map_to_lists,
     })
-    conn
+
+    conn |> put_resp_header("Access-Control-Allow-Origin", "*")
+    conn |> resp(200, "ok")
   end
 
   defp get_url(conn) do

@@ -55,64 +55,49 @@ socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
 let channel           = socket.channel("rooms:" + pageId, {})
-let messagesContainer = $("#messages")
+let messagesContainer = $(".requests_messages")
 
 channel.on("new_msg", payload => {
   console.log("incoming for: " + pageId, payload)
+  let date = new Date();
   let html = `<br/>
-     <div class="panel panel-default">
-       <div class="panel-heading">${Date()}</div>
+     <div class="panel panel-primary" hidden>
+       <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-1"><span class="request_method">${payload.method}</span></div>
+          <div class="col-xs-5">on ${payload.url}</div>
+          <div class="col-xs-2">from ${payload.remote_ip}</div>
+          <div class="col-xs-4"><span class="request_time">at ${moment().format('DD.MM.YYYY HH:mm:ss')}</span></div>
+        </div>
+       </div>
+
        <div class="panel-body">
-         <table class="table table-condensed">
-           <tr>
-             <td class="col-md-6"><b>URL</b></td>
-             <td>${payload.url}</td>
-           </tr>
-           <tr>
-             <td class="col-md-6"><b>Remote IP</b></td>
-             <td>${payload.remote_ip}</td>
-           </tr>
-           <tr>
-             <td><b>Method</b></td>
-             <td>${payload.method}</td>
-           </tr>
-           <tr>
-             <td><b>Body</b></td>
-             <td>${payload.body}</td>
-           </tr>
-           <tr>
-             <td><b>Body Params</b></td>
-             <td>
-              <table class="table table-condensed">
-              #body_params_placeholder#
-              </table>
-             </td>
-           </tr>
-           <tr>
-             <td><b>Query Params</b></td>
-             <td>
-              <table class="table table-condensed">
-              #query_params_placeholder#
-              </table>
-             </td>
-           </tr>
-           <tr>
-             <td><b>Headers</b></td>
-             <td>
-              <table class="table table-condensed">
-              #headers_placeholder#
-              </table>
-            </td>
-           </tr>
-           <tr>
-             <td><b>Cookies</b></td>
-             <td>
-              <table class="table table-condensed">
-              #cookies_placeholder#
-              </table>
-            </td>
-           </tr>
-         </table>
+        <div class="row">
+          <div class="col-sm-6">
+            <ul class="property-list">
+              <li class="request_property">
+                <span class="property_title">Body Params</span>#body_params_placeholder#
+              </li>
+              <li class="request_property">
+                <span class="property_title">Query Params</span>#query_params_placeholder#
+              </li>
+              <li class="request_property">
+                <span class="property_title">Body</span>
+                ${ payload.body ? '<textarea readonly class="body-box form-control" rows="5">' + payload.body + '</textarea>' : '<span class="property_empty">empty<span>' }
+              </li>
+            </ul>
+          </div>
+          <div class="col-sm-6">
+            <ul class="property-list">
+              <li class="request_property">
+                <span class="property_title">Headers</span>#headers_placeholder#
+              </li>
+              <li class="request_property">
+                <span class="property_title">Cookies</span>#cookies_placeholder#
+              </li>       
+            </ul>
+          </div>
+        </div>
        </div>
      </div>`
 
@@ -122,6 +107,7 @@ channel.on("new_msg", payload => {
   html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params))
 
   messagesContainer.prepend(html)
+  $(".panel-primary").slideDown("fast", () => {});
 })
 
 channel.join()
@@ -129,9 +115,10 @@ channel.join()
   .receive("error", resp => { console.error(`Unable to join: "${pageId}"`, resp) })
 
 function constructTableRows(list) {
-  let rows = "";
-  list.forEach(x => rows += `<tr><td><b>${x[0]}</b></td><td>${x[1]}</td></tr>`)
-  return rows;
+  if (!list || list.length <= 0) return '<span class="property_empty">empty<span>'
+  let rows = '<ul class="inner-list">';
+  list.forEach(x => rows += `<li><b>${x[0]}</b> ${x[1]}</li>`)
+  return rows + '</ul>';
 }
 
 export default socket

@@ -1,6 +1,6 @@
-<div class="jumbotron">
+<div class="home_jumbotron jumbotron">
   <h2>Welcome to PhoenixBin</h2>
-  <p class="lead">A requestBin clone implemented in the phoenix framework for elixir</p>
+  <p class="lead">A livereloading requestBin clone implemented in elixir/phoenix</p>
 </div>
 
 <center class="content">

@@ -7,14 +7,14 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello HelloPhoenix!</title>
+    <title>PhoenixBin</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body>
 
       <header class="header">
-        <h1>PhoenixBin</h1>
+        <a href="/" class="header_title">PhoenixBin</a>
       </header>
 
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
@@ -25,5 +25,6 @@
 
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>  
   </body>
 </html>
