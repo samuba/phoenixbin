@@ -35,5 +35,7 @@ defmodule Phoenixbin.Endpoint do
     key: "_phoenixbin_key",
     signing_salt: "7SeZOO0C"
 
+  plug CORSPlug
+
   plug Phoenixbin.Router
 end
