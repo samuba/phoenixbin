@@ -22,6 +22,7 @@ defmodule Phoenixbin.MainController do
       cookies:      conn.cookies      |> map_to_lists,
     })
 
+    conn |> put_resp_header("Access-Control-Allow-Origin", "*")
     conn |> resp(200, "ok")
   end
 
