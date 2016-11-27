@@ -9,8 +9,6 @@ defmodule Phoenixbin do
     children = [
       # Start the endpoint when the application starts
       supervisor(Phoenixbin.Endpoint, []),
-      # Start the Ecto repository
-      supervisor(Phoenixbin.Repo, []),
       # Here you could define other workers and supervisors as children
       # worker(Phoenixbin.Worker, [arg1, arg2, arg3]),
     ]

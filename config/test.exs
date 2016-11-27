@@ -8,12 +8,3 @@ config :phoenixbin, Phoenixbin.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
-
-# Configure your database
-config :phoenixbin, Phoenixbin.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "phoenixbin_test",
-  hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox

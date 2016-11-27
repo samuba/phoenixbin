@@ -30,10 +30,6 @@ defmodule Phoenixbin.Web do
     quote do
       use Phoenix.Controller
 
-      alias Phoenixbin.Repo
-      import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
-
       import Phoenixbin.Router.Helpers
       import Phoenixbin.Gettext
     end
@@ -65,9 +61,6 @@ defmodule Phoenixbin.Web do
     quote do
       use Phoenix.Channel
 
-      alias Phoenixbin.Repo
-      import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
       import Phoenixbin.Gettext
     end
   end
