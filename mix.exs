@@ -17,7 +17,15 @@ defmodule Phoenixbin.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Phoenixbin, []},
-     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext]]
+     applications: [
+       :phoenix, 
+       :phoenix_pubsub, 
+       :phoenix_html, 
+       :cowboy, 
+       :logger, 
+       :gettext,
+       :crypto
+    ]]
   end
 
   # Specifies which paths to compile per environment.
@@ -34,7 +42,6 @@ defmodule Phoenixbin.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
-     {:cors_plug, "~> 1.1"},
-     {:secure_random, "~> 0.5"}]
+     {:cors_plug, "~> 1.1"}]
   end
 end

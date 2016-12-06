@@ -2,8 +2,13 @@ defmodule Phoenixbin.MainController do
   use Phoenixbin.Web, :controller
 
   def generate(conn, _params) do
-    conn |> redirect(to: "/#{SecureRandom.urlsafe_base64(6)}/inspect")
+    conn |> redirect(to: "/#{build_session_key(6)}/inspect")
     conn |> resp(200, "ok")
+  end
+
+  defp build_session_key(length) do
+    :crypto.strong_rand_bytes(length)
+    |> Base.url_encode64
   end
 
   def inspect(conn, %{"id" => id}) do
