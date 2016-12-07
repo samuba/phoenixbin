@@ -66,7 +66,7 @@ channel.on("new_msg", payload => {
         <div class="row">
           <div class="col-xs-1"><span class="request_method">${payload.method}</span></div>
           <div class="col-xs-5">on ${payload.url}</div>
-          <div class="col-xs-2">from ${payload.remote_ip}</div>
+          <div class="col-xs-2">fromsss ${payload.remote_ip}</div>
           <div class="col-xs-4"><span class="request_time">at ${moment().format('DD.MM.YYYY HH:mm:ss')}</span></div>
         </div>
        </div>
@@ -92,17 +92,13 @@ channel.on("new_msg", payload => {
               <li class="request_property">
                 <span class="property_title">Headers</span>#headers_placeholder#
               </li>
-              <li class="request_property">
-                <span class="property_title">Cookies</span>#cookies_placeholder#
-              </li>       
             </ul>
           </div>
         </div>
        </div>
-     </div>`
+     </div>` 
 
   html = html.replace("#headers_placeholder#", constructTableRows(payload.headers))
-  html = html.replace("#cookies_placeholder#", constructTableRows(payload.cookies))
   html = html.replace("#query_params_placeholder#", constructTableRows(payload.query_params))
   html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params))
 

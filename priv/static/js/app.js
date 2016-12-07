@@ -9,32 +9,10 @@
   var aliases = {};
   var has = ({}).hasOwnProperty;
 
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-  };
-
-  var _cmp = 'components/';
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf(_cmp) === 0) {
-        start = _cmp.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
-      }
-    }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return _cmp + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
-  };
-
-  var _reg = /^\.\.?(\/|$)/;
+  var expRe = /^\.\.?(\/|$)/;
   var expand = function(root, name) {
     var results = [], part;
-    var parts = (_reg.test(name) ? root + '/' + name : name).split('/');
+    var parts = (expRe.test(name) ? root + '/' + name : name).split('/');
     for (var i = 0, length = parts.length; i < length; i++) {
       part = parts[i];
       if (part === '..') {
@@ -58,71 +36,122 @@
   };
 
   var initModule = function(name, definition) {
-    var module = {id: name, exports: {}};
+    var hot = null;
+    hot = hmr && hmr.createHot(name);
+    var module = {id: name, exports: {}, hot: hot};
     cache[name] = module;
     definition(module.exports, localRequire(name), module);
     return module.exports;
   };
 
+  var expandAlias = function(name) {
+    return aliases[name] ? expandAlias(aliases[name]) : name;
+  };
+
+  var _resolve = function(name, dep) {
+    return expandAlias(expand(dirname(name), dep));
+  };
+
   var require = function(name, loaderPath) {
-    var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
+    var path = expandAlias(name);
 
     if (has.call(cache, path)) return cache[path].exports;
     if (has.call(modules, path)) return initModule(path, modules[path]);
 
-    var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
-
-    throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
+    throw new Error("Cannot find module '" + name + "' from '" + loaderPath + "'");
   };
 
   require.alias = function(from, to) {
     aliases[to] = from;
   };
 
+  var extRe = /\.[^.\/]+$/;
+  var indexRe = /\/index(\.[^\/]+)?$/;
+  var addExtensions = function(bundle) {
+    if (extRe.test(bundle)) {
+      var alias = bundle.replace(extRe, '');
+      if (!has.call(aliases, alias) || aliases[alias].replace(extRe, '') === alias + '/index') {
+        aliases[alias] = bundle;
+      }
+    }
+
+    if (indexRe.test(bundle)) {
+      var iAlias = bundle.replace(indexRe, '');
+      if (!has.call(aliases, iAlias)) {
+        aliases[iAlias] = bundle;
+      }
+    }
+  };
+
   require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
         if (has.call(bundle, key)) {
-          modules[key] = bundle[key];
+          require.register(key, bundle[key]);
         }
       }
     } else {
       modules[bundle] = fn;
+      delete cache[bundle];
+      addExtensions(bundle);
     }
   };
 
   require.list = function() {
-    var result = [];
+    var list = [];
     for (var item in modules) {
       if (has.call(modules, item)) {
-        result.push(item);
+        list.push(item);
       }
     }
-    return result;
+    return list;
   };
 
-  require.brunch = true;
+  var hmr = globals._hmr && new globals._hmr(_resolve, require, modules, cache);
   require._cache = cache;
+  require.hmr = hmr && hmr.wrap;
+  require.brunch = true;
   globals.require = require;
 })();
-(function() {
-    var global = window;
-    var __shims = {assert: ({}),buffer: ({}),child_process: ({}),cluster: ({}),crypto: ({}),dgram: ({}),dns: ({}),events: ({}),fs: ({}),http: ({}),https: ({}),net: ({}),os: ({}),path: ({}),punycode: ({}),querystring: ({}),readline: ({}),repl: ({}),string_decoder: ({}),tls: ({}),tty: ({}),url: ({}),util: ({}),vm: ({}),zlib: ({}),process: ({"env":{}})};
-    var process = __shims.process;
 
-    var __makeRequire = function(r, __brmap) {
-      return function(name) {
-        if (__brmap[name] !== undefined) name = __brmap[name];
-        name = name.replace(".js", "");
-        return ["assert","buffer","child_process","cluster","crypto","dgram","dns","events","fs","http","https","net","os","path","punycode","querystring","readline","repl","string_decoder","tls","tty","url","util","vm","zlib","process"].indexOf(name) === -1 ? r(name) : __shims[name];
+(function() {
+var global = window;
+var __makeRelativeRequire = function(require, mappings, pref) {
+  var none = {};
+  var tryReq = function(name, pref) {
+    var val;
+    try {
+      val = require(pref + '/node_modules/' + name);
+      return val;
+    } catch (e) {
+      if (e.toString().indexOf('Cannot find module') === -1) {
+        throw e;
       }
-    };
-  require.register('phoenix', function(exports,req,module){
-    var require = __makeRequire((function(n) { return req(n.replace('./', 'phoenix/')); }), {});
+
+      if (pref.indexOf('node_modules') !== -1) {
+        var s = pref.split('/');
+        var i = s.lastIndexOf('node_modules');
+        var newPref = s.slice(0, i).join('/');
+        return tryReq(name, newPref);
+      }
+    }
+    return none;
+  };
+  return function(name) {
+    if (name in mappings) name = mappings[name];
+    if (!name) return;
+    if (name[0] !== '.' && pref) {
+      var val = tryReq(name, pref);
+      if (val !== none) return val;
+    }
+    return require(name);
+  }
+};
+
+require.register("phoenix/priv/static/phoenix.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "phoenix");
+  (function() {
     (function(exports){
 "use strict";
 
@@ -134,6 +163,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // Phoenix Channels JavaScript client
@@ -141,7 +172,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // ## Socket Connection
 //
 // A single connection is established to the server and
-// channels are mulitplexed over the connection.
+// channels are multiplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
 //     let socket = new Socket("/ws", {params: {userToken: "123"}})
@@ -161,7 +192,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // events are listened for, messages are pushed to the server, and
 // the channel is joined with ok/error/timeout matches:
 //
-//     let channel = socket.channel("rooms:123", {token: roomToken})
+//     let channel = socket.channel("room:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
 //       channel.push("new_msg", {body: e.target.val}, 10000)
@@ -184,6 +215,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
 //
+// ## Duplicate Join Subscriptions
+//
+// While the client may join any number of topics on any number of channels,
+// the client may only hold a single subscription for each unique topic at any
+// given time. When attempting to create a duplicate subscription,
+// the server will close the existing channel, log a warning, and
+// spawn a new channel for the topic. The client will have their
+// `channel.onClose` callbacks fired for the existing channel, and the new
+// channel join will have its receive hooks processed as normal.
 //
 // ## Pushing Messages
 //
@@ -214,7 +254,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // ### onError hooks
 //
 // `onError` hooks are invoked if the socket connection drops, or the channel
-// crashes on the server. In either case, a channel rejoin is attemtped
+// crashes on the server. In either case, a channel rejoin is attempted
 // automatically in an exponential backoff manner.
 //
 // ### onClose hooks
@@ -223,7 +263,78 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // closed on the server, or 2). The client explicitly closed, by calling
 // `channel.leave()`
 //
-
+//
+// ## Presence
+//
+// The `Presence` object provides features for syncing presence information
+// from the server with the client and handling presences joining and leaving.
+//
+// ### Syncing initial state from the server
+//
+// `Presence.syncState` is used to sync the list of presences on the server
+// with the client's state. An optional `onJoin` and `onLeave` callback can
+// be provided to react to changes in the client's local presences across
+// disconnects and reconnects with the server.
+//
+// `Presence.syncDiff` is used to sync a diff of presence join and leave
+// events from the server, as they happen. Like `syncState`, `syncDiff`
+// accepts optional `onJoin` and `onLeave` callbacks to react to a user
+// joining or leaving from a device.
+//
+// ### Listing Presences
+//
+// `Presence.list` is used to return a list of presence information
+// based on the local state of metadata. By default, all presence
+// metadata is returned, but a `listBy` function can be supplied to
+// allow the client to select which metadata to use for a given presence.
+// For example, you may have a user online from different devices with a
+// a metadata status of "online", but they have set themselves to "away"
+// on another device. In this case, they app may choose to use the "away"
+// status for what appears on the UI. The example below defines a `listBy`
+// function which prioritizes the first metadata which was registered for
+// each user. This could be the first tab they opened, or the first device
+// they came online from:
+//
+//     let state = {}
+//     state = Presence.syncState(state, stateFromServer)
+//     let listBy = (id, {metas: [first, ...rest]}) => {
+//       first.count = rest.length + 1 // count of this user's presences
+//       first.id = id
+//       return first
+//     }
+//     let onlineUsers = Presence.list(state, listBy)
+//
+//
+// ### Example Usage
+//
+//     // detect if user has joined for the 1st time or from another tab/device
+//     let onJoin = (id, current, newPres) => {
+//       if(!current){
+//         console.log("user has entered for the first time", newPres)
+//       } else {
+//         console.log("user additional presence", newPres)
+//       }
+//     }
+//     // detect if user has left from all tabs/devices, or is still present
+//     let onLeave = (id, current, leftPres) => {
+//       if(current.metas.length === 0){
+//         console.log("user has left from all devices", leftPres)
+//       } else {
+//         console.log("user left from a device", leftPres)
+//       }
+//     }
+//     let presences = {} // client's initial empty presence state
+//     // receive initial presence data from server, sent after join
+//     myChannel.on("presences", state => {
+//       presences = Presence.syncState(presences, state, onJoin, onLeave)
+//       displayUsers(Presence.list(presences))
+//     })
+//     // receive "presence_diff" from server, containing join/leave events
+//     myChannel.on("presence_diff", diff => {
+//       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
+//       this.setState({users: Presence.list(room.presences, listBy)})
+//     })
+//
 var VSN = "1.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 10000;
@@ -231,7 +342,8 @@ var CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
   joined: "joined",
-  joining: "joining"
+  joining: "joining",
+  leaving: "leaving"
 };
 var CHANNEL_EVENTS = {
   close: "phx_close",
@@ -398,20 +510,23 @@ var Channel = exports.Channel = function () {
       _this2.pushBuffer = [];
     });
     this.onClose(function () {
-      _this2.socket.log("channel", "close " + _this2.topic);
+      _this2.rejoinTimer.reset();
+      _this2.socket.log("channel", "close " + _this2.topic + " " + _this2.joinRef());
       _this2.state = CHANNEL_STATES.closed;
       _this2.socket.remove(_this2);
     });
     this.onError(function (reason) {
+      if (_this2.isLeaving() || _this2.isClosed()) {
+        return;
+      }
       _this2.socket.log("channel", "error " + _this2.topic, reason);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
     });
     this.joinPush.receive("timeout", function () {
-      if (_this2.state !== CHANNEL_STATES.joining) {
+      if (!_this2.isJoining()) {
         return;
       }
-
       _this2.socket.log("channel", "timeout " + _this2.topic, _this2.joinPush.timeout);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
@@ -438,9 +553,9 @@ var Channel = exports.Channel = function () {
         throw "tried to join multiple times. 'join' can only be called a single time per channel instance";
       } else {
         this.joinedOnce = true;
+        this.rejoin(timeout);
+        return this.joinPush;
       }
-      this.rejoin(timeout);
-      return this.joinPush;
     }
   }, {
     key: "onClose",
@@ -469,7 +584,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "canPush",
     value: function canPush() {
-      return this.socket.isConnected() && this.state === CHANNEL_STATES.joined;
+      return this.socket.isConnected() && this.isJoined();
     }
   }, {
     key: "push",
@@ -510,9 +625,10 @@ var Channel = exports.Channel = function () {
 
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
 
+      this.state = CHANNEL_STATES.leaving;
       var onClose = function onClose() {
         _this3.socket.log("channel", "leave " + _this3.topic);
-        _this3.trigger(CHANNEL_EVENTS.close, "leave");
+        _this3.trigger(CHANNEL_EVENTS.close, "leave", _this3.joinRef());
       };
       var leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout);
       leavePush.receive("ok", function () {
@@ -531,10 +647,15 @@ var Channel = exports.Channel = function () {
     // Overridable message hook
     //
     // Receives all events for specialized message handling
+    // before dispatching to the channel callbacks.
+    //
+    // Must return the payload, modified or unmodified
 
   }, {
     key: "onMessage",
-    value: function onMessage(event, payload, ref) {}
+    value: function onMessage(event, payload, ref) {
+      return payload;
+    }
 
     // private
 
@@ -542,6 +663,11 @@ var Channel = exports.Channel = function () {
     key: "isMember",
     value: function isMember(topic) {
       return this.topic === topic;
+    }
+  }, {
+    key: "joinRef",
+    value: function joinRef() {
+      return this.joinPush.ref;
     }
   }, {
     key: "sendJoin",
@@ -553,22 +679,62 @@ var Channel = exports.Channel = function () {
     key: "rejoin",
     value: function rejoin() {
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      if (this.isLeaving()) {
+        return;
+      }
       this.sendJoin(timeout);
     }
   }, {
     key: "trigger",
-    value: function trigger(triggerEvent, payload, ref) {
-      this.onMessage(triggerEvent, payload, ref);
+    value: function trigger(event, payload, ref) {
+      var close = CHANNEL_EVENTS.close;
+      var error = CHANNEL_EVENTS.error;
+      var leave = CHANNEL_EVENTS.leave;
+      var join = CHANNEL_EVENTS.join;
+
+      if (ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()) {
+        return;
+      }
+      var handledPayload = this.onMessage(event, payload, ref);
+      if (payload && !handledPayload) {
+        throw "channel onMessage callbacks must return the payload, modified or unmodified";
+      }
+
       this.bindings.filter(function (bind) {
-        return bind.event === triggerEvent;
+        return bind.event === event;
       }).map(function (bind) {
-        return bind.callback(payload, ref);
+        return bind.callback(handledPayload, ref);
       });
     }
   }, {
     key: "replyEventName",
     value: function replyEventName(ref) {
       return "chan_reply_" + ref;
+    }
+  }, {
+    key: "isClosed",
+    value: function isClosed() {
+      return this.state === CHANNEL_STATES.closed;
+    }
+  }, {
+    key: "isErrored",
+    value: function isErrored() {
+      return this.state === CHANNEL_STATES.errored;
+    }
+  }, {
+    key: "isJoined",
+    value: function isJoined() {
+      return this.state === CHANNEL_STATES.joined;
+    }
+  }, {
+    key: "isJoining",
+    value: function isJoining() {
+      return this.state === CHANNEL_STATES.joining;
+    }
+  }, {
+    key: "isLeaving",
+    value: function isLeaving() {
+      return this.state === CHANNEL_STATES.leaving;
     }
   }]);
 
@@ -801,7 +967,7 @@ var Socket = exports.Socket = function () {
     key: "remove",
     value: function remove(channel) {
       this.channels = this.channels.filter(function (c) {
-        return !c.isMember(channel.topic);
+        return c.joinRef() !== channel.joinRef();
       });
     }
   }, {
@@ -1097,6 +1263,114 @@ var Ajax = exports.Ajax = function () {
 
 Ajax.states = { complete: 4 };
 
+var Presence = exports.Presence = {
+  syncState: function syncState(currentState, newState, onJoin, onLeave) {
+    var _this12 = this;
+
+    var state = this.clone(currentState);
+    var joins = {};
+    var leaves = {};
+
+    this.map(state, function (key, presence) {
+      if (!newState[key]) {
+        leaves[key] = presence;
+      }
+    });
+    this.map(newState, function (key, newPresence) {
+      var currentPresence = state[key];
+      if (currentPresence) {
+        (function () {
+          var newRefs = newPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curRefs = currentPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var joinedMetas = newPresence.metas.filter(function (m) {
+            return curRefs.indexOf(m.phx_ref) < 0;
+          });
+          var leftMetas = currentPresence.metas.filter(function (m) {
+            return newRefs.indexOf(m.phx_ref) < 0;
+          });
+          if (joinedMetas.length > 0) {
+            joins[key] = newPresence;
+            joins[key].metas = joinedMetas;
+          }
+          if (leftMetas.length > 0) {
+            leaves[key] = _this12.clone(currentPresence);
+            leaves[key].metas = leftMetas;
+          }
+        })();
+      } else {
+        joins[key] = newPresence;
+      }
+    });
+    return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+  },
+  syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
+    var joins = _ref2.joins;
+    var leaves = _ref2.leaves;
+
+    var state = this.clone(currentState);
+    if (!onJoin) {
+      onJoin = function onJoin() {};
+    }
+    if (!onLeave) {
+      onLeave = function onLeave() {};
+    }
+
+    this.map(joins, function (key, newPresence) {
+      var currentPresence = state[key];
+      state[key] = newPresence;
+      if (currentPresence) {
+        var _state$key$metas;
+
+        (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(currentPresence.metas));
+      }
+      onJoin(key, currentPresence, newPresence);
+    });
+    this.map(leaves, function (key, leftPresence) {
+      var currentPresence = state[key];
+      if (!currentPresence) {
+        return;
+      }
+      var refsToRemove = leftPresence.metas.map(function (m) {
+        return m.phx_ref;
+      });
+      currentPresence.metas = currentPresence.metas.filter(function (p) {
+        return refsToRemove.indexOf(p.phx_ref) < 0;
+      });
+      onLeave(key, currentPresence, leftPresence);
+      if (currentPresence.metas.length === 0) {
+        delete state[key];
+      }
+    });
+    return state;
+  },
+  list: function list(presences, chooser) {
+    if (!chooser) {
+      chooser = function chooser(key, pres) {
+        return pres;
+      };
+    }
+
+    return this.map(presences, function (key, presence) {
+      return chooser(key, presence);
+    });
+  },
+
+  // private
+
+  map: function map(obj, func) {
+    return Object.getOwnPropertyNames(obj).map(function (key) {
+      return func(key, obj[key]);
+    });
+  },
+  clone: function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+};
+
 // Creates a timer that accepts a `timerCalc` function to perform
 // calculated timeout retries, such as exponential backoff.
 //
@@ -1133,13 +1407,13 @@ var Timer = function () {
   }, {
     key: "scheduleTimeout",
     value: function scheduleTimeout() {
-      var _this12 = this;
+      var _this13 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this12.tries = _this12.tries + 1;
-        _this12.callback();
+        _this13.tries = _this13.tries + 1;
+        _this13.callback();
       }, this.timerCalc(this.tries + 1));
     }
   }]);
@@ -1147,45 +1421,47 @@ var Timer = function () {
   return Timer;
 }();
 
-
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
-
-  });
-require.register('phoenix_html', function(exports,req,module){
-    var require = __makeRequire((function(n) { return req(n.replace('./', 'phoenix_html/')); }), {});
-    'use strict';
-
-// Although ^=parent is not technically correct,
-// we need to use it in order to get IE8 support.
-var elements = document.querySelectorAll('[data-submit^=parent]');
-var len = elements.length;
-
-for (var i = 0; i < len; ++i) {
-  elements[i].addEventListener('click', function (event) {
-    var message = this.getAttribute("data-confirm");
-    if (message === null || confirm(message)) {
-      this.parentNode.submit();
-    };
-    event.preventDefault();
-    return false;
-  }, false);
-}
-
-;
-  });
-})();require.register("web/static/js/app", function(exports, require, module) {
-"use strict";
-
-require("phoenix_html");
-
-var _socket = require("./socket");
-
-var _socket2 = _interopRequireDefault(_socket);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+  })();
 });
 
-;require.register("web/static/js/socket", function(exports, require, module) {
+require.register("phoenix_html/priv/static/phoenix_html.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "phoenix_html");
+  (function() {
+    'use strict';
+
+function isLinkToSubmitParent(element) {
+  var isLinkTag = element.tagName === 'A';
+  var shouldSubmitParent = element.getAttribute('data-submit') === 'parent';
+
+  return isLinkTag && shouldSubmitParent;
+}
+
+function didHandleSubmitLinkClick(element) {
+  while (element && element.getAttribute) {
+    if (isLinkToSubmitParent(element)) {
+      var message = element.getAttribute('data-confirm');
+      if (message === null || confirm(message)) {
+        element.parentNode.submit();
+      };
+      return true;
+    } else {
+      element = element.parentNode;
+    }
+  }
+  return false;
+}
+
+// for links with HTTP methods other than GET
+window.addEventListener('click', function (event) {
+  if (event.target && didHandleSubmitLinkClick(event.target)) {
+    event.preventDefault();
+    return false;
+  }
+}, false);
+  })();
+});
+require.register("SourceCode/phoenixbin/web/static/js/socket.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1254,10 +1530,9 @@ var messagesContainer = $(".requests_messages");
 channel.on("new_msg", function (payload) {
   console.log("incoming for: " + pageId, payload);
   var date = new Date();
-  var html = "<br/>\n     <div class=\"panel panel-primary\" hidden>\n       <div class=\"panel-heading\">\n        <div class=\"row\">\n          <div class=\"col-xs-1\"><span class=\"request_method\">" + payload.method + "</span></div>\n          <div class=\"col-xs-5\">on " + payload.url + "</div>\n          <div class=\"col-xs-2\">from " + payload.remote_ip + "</div>\n          <div class=\"col-xs-4\"><span class=\"request_time\">at " + moment().format('DD.MM.YYYY HH:mm:ss') + "</span></div>\n        </div>\n       </div>\n\n       <div class=\"panel-body\">\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body Params</span>#body_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Query Params</span>#query_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body</span>\n                " + (payload.body ? '<textarea readonly class="body-box form-control" rows="5">' + payload.body + '</textarea>' : '<span class="property_empty">empty<span>') + "\n              </li>\n            </ul>\n          </div>\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Headers</span>#headers_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Cookies</span>#cookies_placeholder#\n              </li>       \n            </ul>\n          </div>\n        </div>\n       </div>\n     </div>";
+  var html = "<br/>\n     <div class=\"panel panel-primary\" hidden>\n       <div class=\"panel-heading\">\n        <div class=\"row\">\n          <div class=\"col-xs-1\"><span class=\"request_method\">" + payload.method + "</span></div>\n          <div class=\"col-xs-5\">on " + payload.url + "</div>\n          <div class=\"col-xs-2\">fromsss " + payload.remote_ip + "</div>\n          <div class=\"col-xs-4\"><span class=\"request_time\">at " + moment().format('DD.MM.YYYY HH:mm:ss') + "</span></div>\n        </div>\n       </div>\n\n       <div class=\"panel-body\">\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body Params</span>#body_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Query Params</span>#query_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body</span>\n                " + (payload.body ? '<textarea readonly class="body-box form-control" rows="5">' + payload.body + '</textarea>' : '<span class="property_empty">empty<span>') + "\n              </li>\n            </ul>\n          </div>\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Headers</span>#headers_placeholder#\n              </li>\n            </ul>\n          </div>\n        </div>\n       </div>\n     </div>";
 
   html = html.replace("#headers_placeholder#", constructTableRows(payload.headers));
-  html = html.replace("#cookies_placeholder#", constructTableRows(payload.cookies));
   html = html.replace("#query_params_placeholder#", constructTableRows(payload.query_params));
   html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params));
 
@@ -1283,5 +1558,119 @@ function constructTableRows(list) {
 exports.default = socket;
 });
 
-;require('web/static/js/app');
+;require.register("web/static/js/app.js", function(exports, require, module) {
+"use strict";
+
+require("phoenix_html");
+
+var _socket = require("./socket");
+
+var _socket2 = _interopRequireDefault(_socket);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+});
+
+;require.register("web/static/js/socket.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _phoenix = require("phoenix");
+
+var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken } });
+
+// When you connect, you'll often need to authenticate the client.
+// For example, imagine you have an authentication plug, `MyAuth`,
+// which authenticates the session and assigns a `:current_user`.
+// If the current user exists you can assign the user's token in
+// the connection for use in the layout.
+//
+// In your "web/router.ex":
+//
+//     pipeline :browser do
+//       ...
+//       plug MyAuth
+//       plug :put_user_token
+//     end
+//
+//     defp put_user_token(conn, _) do
+//       if current_user = conn.assigns[:current_user] do
+//         token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+//         assign(conn, :user_token, token)
+//       else
+//         conn
+//       end
+//     end
+//
+// Now you need to pass this token to JavaScript. You can do so
+// inside a script tag in "web/templates/layout/app.html.eex":
+//
+//     <script>window.userToken = "<%= assigns[:user_token] %>";</script>
+//
+// You will need to verify the user token in the "connect/2" function
+// in "web/channels/user_socket.ex":
+//
+//     def connect(%{"token" => token}, socket) do
+//       # max_age: 1209600 is equivalent to two weeks in seconds
+//       case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
+//         {:ok, user_id} ->
+//           {:ok, assign(socket, :user, user_id)}
+//         {:error, reason} ->
+//           :error
+//       end
+//     end
+//
+// Finally, pass the token on connect as below. Or remove it
+// from connect if you don't care about authentication.
+
+// NOTE: The contents of this file will only be executed if
+// you uncomment its entry in "web/static/js/app.js".
+
+// To use Phoenix channels, the first step is to import Socket
+// and connect at the socket path in "lib/my_app/endpoint.ex":
+socket.connect();
+
+// Now that you are connected, you can join channels with a topic:
+var channel = socket.channel("rooms:" + pageId, {});
+var messagesContainer = $(".requests_messages");
+
+channel.on("new_msg", function (payload) {
+  console.log("incoming for: " + pageId, payload);
+  var date = new Date();
+  var html = "<br/>\n     <div class=\"panel panel-primary\" hidden>\n       <div class=\"panel-heading\">\n        <div class=\"row\">\n          <div class=\"col-xs-1\"><span class=\"request_method\">" + payload.method + "</span></div>\n          <div class=\"col-xs-5\">on " + payload.url + "</div>\n          <div class=\"col-xs-2\">fromsss " + payload.remote_ip + "</div>\n          <div class=\"col-xs-4\"><span class=\"request_time\">at " + moment().format('DD.MM.YYYY HH:mm:ss') + "</span></div>\n        </div>\n       </div>\n\n       <div class=\"panel-body\">\n        <div class=\"row\">\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body Params</span>#body_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Query Params</span>#query_params_placeholder#\n              </li>\n              <li class=\"request_property\">\n                <span class=\"property_title\">Body</span>\n                " + (payload.body ? '<textarea readonly class="body-box form-control" rows="5">' + payload.body + '</textarea>' : '<span class="property_empty">empty<span>') + "\n              </li>\n            </ul>\n          </div>\n          <div class=\"col-sm-6\">\n            <ul class=\"property-list\">\n              <li class=\"request_property\">\n                <span class=\"property_title\">Headers</span>#headers_placeholder#\n              </li>\n            </ul>\n          </div>\n        </div>\n       </div>\n     </div>";
+
+  html = html.replace("#headers_placeholder#", constructTableRows(payload.headers));
+  html = html.replace("#query_params_placeholder#", constructTableRows(payload.query_params));
+  html = html.replace("#body_params_placeholder#", constructTableRows(payload.body_params));
+
+  messagesContainer.prepend(html);
+  $(".panel-primary").slideDown("fast", function () {});
+});
+
+channel.join().receive("ok", function (resp) {
+  console.log("Joined successfully: \"" + pageId + "\"", resp);
+}).receive("error", function (resp) {
+  console.error("Unable to join: \"" + pageId + "\"", resp);
+});
+
+function constructTableRows(list) {
+  if (!list || list.length <= 0) return '<span class="property_empty">empty<span>';
+  var rows = '<ul class="inner-list">';
+  list.forEach(function (x) {
+    return rows += "<li><b>" + x[0] + "</b> " + x[1] + "</li>";
+  });
+  return rows + '</ul>';
+}
+
+exports.default = socket;
+});
+
+;require.alias("phoenix/priv/static/phoenix.js", "phoenix");
+require.alias("phoenix_html/priv/static/phoenix_html.js", "phoenix_html");require.register("___globals___", function(exports, require, module) {
+  
+});})();require('___globals___');
+
+require('web/static/js/app');
 //# sourceMappingURL=app.js.map

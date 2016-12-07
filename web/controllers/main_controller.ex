@@ -24,7 +24,6 @@ defmodule Phoenixbin.MainController do
       method:       conn.method,
       body_params:  conn.body_params  |> map_to_lists,
       query_params: conn.query_params |> map_to_lists,
-      cookies:      conn.cookies      |> map_to_lists,
     })
 
     conn |> resp(200, "ok")
