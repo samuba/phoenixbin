@@ -1,14 +1,14 @@
 <div class="requests">
 	<div class="requests_head">listening for http request on   
-		<input 
-			readonly="true"
-			class="request-url"
-			value="<%= main_url(@conn, :request, @id) %>">
-
 		<div class="info-box alert alert-info" role="alert">
 			<i class="fa fa-lg fa-info-circle" aria-hidden="true"></i>
 			Requests are passed to your Browser on-the-fly. No Requests are stored on server side. 
 		</div>
+
+		<input 
+			readonly="true"
+			class="request-url"
+			value="<%= main_url(@conn, :request, @id) %>">
 	<div>
 
 	<div class="requests_messages"></div>
