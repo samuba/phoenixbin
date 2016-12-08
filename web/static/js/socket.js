@@ -66,7 +66,7 @@ channel.on("new_msg", payload => {
         <div class="row">
           <div class="col-xs-1"><span class="request_method">${payload.method}</span></div>
           <div class="col-xs-5">on ${payload.url}</div>
-          <div class="col-xs-2">fromsss ${payload.remote_ip}</div>
+          <div class="col-xs-2">from ${payload.remote_ip}</div>
           <div class="col-xs-4"><span class="request_time">at ${moment().format('DD.MM.YYYY HH:mm:ss')}</span></div>
         </div>
        </div>
