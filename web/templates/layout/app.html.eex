@@ -8,16 +8,19 @@
     <meta name="author" content="">
 
     <title>PhoenixBin</title>
+
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body>
+    <header class="h2 bb b--black-10 h-auto pv2 pl3">
+      <a href="/" class="f4 b link w3 dark-orange">
+        <i class="fa fa-trash-o" aria-hidden="true"></i>
+        PhoenixBin
+      </a>
+    </header>
 
-      <header class="header">
-        <a href="/" class="header_title">PhoenixBin</a>
-      </header>
-
-        <%= render @view_module, @view_template, assigns %>
+    <%= render @view_module, @view_template, assigns %>
 
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>

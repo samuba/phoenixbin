@@ -1,8 +1,13 @@
-<div class="home_jumbotron jumbotron">
-  <h2>Welcome to PhoenixBin</h2>
-  <p class="lead">A livereloading requestBin clone implemented in elixir/phoenix</p>
-</div>
+<div class="tc">
+  <div class="gradient-orange mt6 pv4 white">
+    <h2 class="f2">Inspect HTTP Requests</h2>
+    <p>Create a Webhook URL and live-track or inspect requests that were send to it.</p>
+  </div>
 
-<center class="content">
-  <a href="generate" class="btn btn-primary btn-lg">Generate Request Page</a>
-</center>
+
+  <a href="generate" class="dib mt5 f4 link ph4 pv2 
+                            white bg-orange 
+                            br2 bw1 bb b--black-20">
+    Create Webhook
+  </a>
+</div>
