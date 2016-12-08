@@ -1,7 +1,7 @@
 <div class="tc">
   <div class="gradient-orange mt6 pv4 white">
     <h2 class="f2">Inspect HTTP Requests</h2>
-    <p>Create a Webhook URL and live-track or inspect requests that were send to it.</p>
+    <p>Create a Webhook URL to live-track and inspect requests that were send to it.</p>
   </div>
 
 
