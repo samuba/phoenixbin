@@ -1,17 +1,26 @@
-<div class="requests">
-	<div class="requests_head">listening for http request on   
-		<div class="info-box alert alert-info" role="alert">
-			<i class="fa fa-lg fa-info-circle" aria-hidden="true"></i>
-			Requests are passed to your Browser on-the-fly. No Requests are stored on server side. 
+<div class="ph4">
+	
+	<div class="f4 mt4 tc">
+		listening on 
+    <input value=" <%= main_url(@conn, :request, @id) %> " 
+      readonly="true"
+			id="request-url-box" 
+      class="">
+	</div>
+
+	<div class="requests">
+  </div>
+
+	<div class="fixed bottom-1 left-1 f6 mt3 bg-white br2 ba b--black-10 shadow-6">
+		<div class="mv2 pv2 fl w2 tc br b--black-10 black-70">
+			<i class="fa fa-lg fa-info-circle dark-orange" aria-hidden="true"></i>
 		</div>
 
-		<input 
-			readonly="true"
-			class="request-url"
-			value="<%= main_url(@conn, :request, @id) %>">
-	<div>
-
-	<div class="requests_messages"></div>
+		<div class="dib w-auto pa2">
+			Requests are passed to your Browser on-the-fly. <br>
+			No requests are stored on server side.
+		</div> 
+	</div>
 <div>
 
 <script>
@@ -19,7 +28,7 @@
 	var pageId = "<%= @id %>";
 
 	window.onload = () => {
-		autoresizeInput(".request-url")
+		autoresizeInput("#request-url-box")
 	}
 
 	function autoresizeInput (cssClass) {

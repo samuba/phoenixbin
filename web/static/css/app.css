@@ -1,13 +1,13 @@
-.gradient-orange {
+.bg-orange-gradient {
     background-image: radial-gradient( circle at 50% 50%, #F67938 29%, #EF4734 120%);
 }
 
-.bg-orange {
-    background-color: #f57338;
-}
+.bg-orange { background-color: #f57338; }
 
-.dark-orange {
-    color: #eb5236
-}
+.dark-orange { color: #eb5236 }
 
 .shadow-6 { box-shadow: 3px 3px 6px 0 rgba( 0, 0, 0, .2 ); }
+
+.shadow-7 { box-shadow: 3px 3px 6px 1px rgba( 0, 0, 0, .14 ); }
+
+.shadow-inset { box-shadow:inset 1px 1px 1px 1px rgba(0,0,0,.075); }
