@@ -62,14 +62,14 @@ channel.on("new_msg", payload => {
   let date = new Date().toISOString()
   let html = `
     <div class="request shadow-7 br2 br--bottom mt4" hidden>
-      <div class="br2 br--top bg-orange h2 pa2 white tc f5">
+      <div class="br2 br--top bt b--light-gray bg-orange h2 pa2 white tc f5">
         <span class="fl w-10 b">${payload.method}</span>
         <span class="fl w-40">on ${payload.url}</span>
         <span class="fl w-20">from ${payload.remote_ip}</span>
         <span class="fl w-30">at ${date.split("T")[1].substr(0, 8)} ${date.split("T")[0]}</span>
       </div>
 
-       <div class="flex justify-between f6">
+       <div class="flex justify-between f6 br2 br--bottom bb br bl b--light-gray">
         <div class="w-50">
           <ul class="list pl3">
             <li class="mt3">
