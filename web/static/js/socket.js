@@ -59,14 +59,16 @@ let messagesContainer = $(".requests")
 
 channel.on("new_msg", payload => {
   console.log("incoming for: " + pageId, payload)
-  let date = new Date().toISOString()
+  let timestamp = new Date().toISOString()
+  let time = timestamp.split("T")[1].substr(0, 8)
+  let date = timestamp.split("T")[0]
   let html = `
     <div class="request shadow-7 br2 br--bottom mt4" hidden>
-      <div class="br2 br--top bt b--light-gray bg-orange h2 pa2 white tc f5">
-        <span class="fl w-10 b">${payload.method}</span>
-        <span class="fl w-40">on ${payload.url}</span>
-        <span class="fl w-20">from ${payload.remote_ip}</span>
-        <span class="fl w-30">at ${date.split("T")[1].substr(0, 8)} ${date.split("T")[0]}</span>
+      <div class="flex justify-between br2 br--top bt b--light-gray bg-orange h2 pv2 ph3 white tc f5">
+        <span class="b">${payload.method}</span>
+        <span class="">on <span class="b">${payload.url}</span></span>
+        <span class="">from <span class="b">${payload.remote_ip}</span></span>
+        <span class="">at <span title="${date} ${time}" class="b">${time}</span></span>
       </div>
 
        <div class="flex justify-between f6 br2 br--bottom bb br bl b--light-gray">

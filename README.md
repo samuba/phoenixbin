@@ -6,3 +6,5 @@ A simple, live reloading requestbin clone written in elixir/phoenix.
 
 ### Todo:
 - unify bodies
+- make responsive
+- channel connection indicator
