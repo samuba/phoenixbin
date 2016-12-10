@@ -13,9 +13,9 @@
   </head>
 
   <body>
-    <header class="h2 bb b--black-10 h-auto pv2 pl3">
-      <a href="/" class="f4 b link w3 dark-orange">
-        <i class="fa fa-trash-o" aria-hidden="true"></i>
+    <header class="bb b--black-10 pv2 pl3">
+      <a href="/" class="f4 link w3 dark-orange">
+        <i class="icon-trashcan" aria-hidden="true"></i>
         PhoenixBin
       </a>
     </header>
@@ -24,7 +24,5 @@
 
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
-    <script src="//use.fontawesome.com/a3404830f4.js"></script>
   </body>
 </html>

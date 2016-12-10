@@ -6,6 +6,9 @@
       readonly="true"
 			id="request-url-box" 
       class="">
+      <a href="#" class="white bg-orange ph2 pv1 br2 bw1 bb b--black-20">
+        <i class="icon-clippy"></i>
+      </a>
 	</div>
 
 	<div class="requests">
@@ -13,7 +16,7 @@
 
 	<div class="fixed bottom-1 left-1 f6 mt3 bg-white br2 ba b--black-10 shadow-6">
 		<div class="mv2 pv2 fl w2 tc br b--black-10 black-70">
-			<i class="fa fa-lg fa-info-circle dark-orange" aria-hidden="true"></i>
+			<i class="icon-info f4 dark-orange" aria-hidden="true"></i>
 		</div>
 
 		<div class="dib w-auto pa2">

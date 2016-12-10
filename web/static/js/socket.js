@@ -59,14 +59,14 @@ let messagesContainer = $(".requests")
 
 channel.on("new_msg", payload => {
   console.log("incoming for: " + pageId, payload)
-  let date = new Date();
+  let date = new Date().toISOString()
   let html = `
     <div class="request shadow-7 br2 br--bottom mt4" hidden>
       <div class="br2 br--top bg-orange h2 pa2 white tc f5">
         <span class="fl w-10 b">${payload.method}</span>
         <span class="fl w-40">on ${payload.url}</span>
         <span class="fl w-20">from ${payload.remote_ip}</span>
-        <span class="fl w-30">at ${moment().format('DD.MM.YYYY HH:mm:ss')}</span>
+        <span class="fl w-30">at ${date.split("T")[1].substr(0, 8)} ${date.split("T")[0]}</span>
       </div>
 
        <div class="flex justify-between f6">
