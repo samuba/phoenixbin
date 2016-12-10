@@ -7,7 +7,7 @@
 
   <a href="generate" class="dib mt5 f4 link ph4 pv2 
                             white bg-orange 
-                            br2 bw1 bb b--black-20">
+                            br2 bw1 bb b--black-20 hover-bg-dark-orange hover-near-white bg-animate">
     Create Webhook
   </a>
 </div>
