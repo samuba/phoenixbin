@@ -11,3 +11,12 @@
 
 .hover-bg-dark-orange:hover { background: #dc6732; }
 .hover-bg-dark-orange:focus { background: #f57338; }
+
+.f4-1{font-size:1.20rem}
+.f4-2{font-size:1.15rem}
+.f4-3{font-size:1.05rem}
+
+.mt0-1 { margin-top: .05rem; }
+.mt0-2 { margin-top: .10rem; }
+.mt0-3 { margin-top: .15rem; }
+.mt0-4 { margin-top: .20rem; }

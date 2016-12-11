@@ -12,17 +12,20 @@
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
+  <!--<body class="debug-grid-16">-->
   <body>
     <header class="bb b--black-10 pv2 pl3">
       <a href="/" class="f4 link w3 dark-orange">
-        <i class="icon-trashcan" aria-hidden="true"></i>
-        PhoenixBin
+        <i class="icon-trashcan" aria-hidden="true"></i> PhoenixBin
       </a>
+      <div class="dib ml3 mt0-2">
+        <iframe src="https://ghbtns.com/github-btn.html?user=samuba&repo=phoenixbin&type=star&count=true" 
+          frameborder="0" scrolling="0" width="100px" height="20px"></iframe>
+      </div>
     </header>
 
     <%= render @view_module, @view_template, assigns %>
 
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
