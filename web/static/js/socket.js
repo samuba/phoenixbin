@@ -75,10 +75,10 @@ channel.on("new_msg", payload => {
         <div class="w-50">
           <ul class="list pl3">
             <li class="mt3">
-              <span class="underline">Body Params</span>#body_params_placeholder#
+              <span class="underline">Query Parameters</span>#query_params_placeholder#
             </li>
             <li class="mt3">
-              <span class="underline">Query Params</span>#query_params_placeholder#
+              <span class="underline">Form/Post Parameters</span>#body_params_placeholder#
             </li>
             <li class="mt3">
               <span class="underline">Body</span>
