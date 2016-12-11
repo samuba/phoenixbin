@@ -4,8 +4,9 @@
 		listening on 
     <input value=" <%= main_url(@conn, :request, @id) %> " 
       readonly="true" id="request-url-box" class="">
-		<a title="copy to clipboard" href="javascript:putSessionKeyInClipboard()" class="white bg-orange ph2 pv1 br2 bw1 bb b--black-20 hover-bg-dark-orange hover-near-white bg-animate">
-			<i class="icon-clippy"></i>
+		<a title="copy to clipboard" href="javascript:putSessionKeyInClipboard()" 
+			class="white bg-orange ph2 pv1 br2 bw1 bb b--black-20 hover-bg-dark-orange hover-near-white bg-animate">
+			<i class="icon-clippy f4-1"></i>
 		</a>
 	</div>
 
